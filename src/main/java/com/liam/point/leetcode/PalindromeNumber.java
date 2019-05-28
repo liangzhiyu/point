@@ -15,7 +15,7 @@ public class PalindromeNumber {
 
     public static Boolean isPalindromeNumber(String number){
         String[] split = number.split("");
-        for (int i = 0; i < split.length; i++) {
+        for (int i = 0; i < split.length/2; i++) {
             String start = split[i];
             String end = split[split.length - i-1];
             if (!start.equals(end)) {
