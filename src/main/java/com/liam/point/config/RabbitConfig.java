@@ -1,42 +1,51 @@
 package com.liam.point.config;
 
-import com.liam.point.constant.RabbitConstants;
+import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Scope;
-
-import javax.annotation.Resource;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * @author: liangzy
  * @date: 2019/02/26 下午2:29
  * @desc:
  */
-public class RabbitConfig {
-    @Resource
-    private RabbitConstants rabbitConstants;
 
-    @Bean
-    public ConnectionFactory connectionFactory() {
-        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-        connectionFactory.setAddresses(rabbitConstants.getHost());
-        connectionFactory.setUsername(rabbitConstants.getUsername());
-        connectionFactory.setVirtualHost(rabbitConstants.getVirtualHost());
-        connectionFactory.setPassword(rabbitConstants.getPassword());
-//        * 如果要进行消息回调，则这里必须要设置为true
-        connectionFactory.setPublisherConfirms(rabbitConstants.getPublisherConfirms());
-        return connectionFactory;
-    }
+@Configuration
+public class RabbitConfig {
 
     /**
-     * 因为要设置回调类，所以应是prototype类型，如果是singleton类型，则回调类为最后一次设置
+     * 定义一个名为：oKong 的队列
+     * @return
      */
     @Bean
-    @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-    public RabbitTemplate rabbitTemplate() {
-        return new RabbitTemplate(connectionFactory());
+    public Queue okongQueue() {
+        return new Queue("okong");
+    }
+
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory){
+        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        rabbitTemplate.setConfirmCallback(new RabbitTemplate.ConfirmCallback() {
+
+            /**
+             * @param correlationData 唯一标识，有了这个唯一标识，我们就知道可以确认（失败）哪一条消息了
+             * @param ack
+             * @param cause
+             */
+            @Override
+            public void confirm(CorrelationData correlationData, boolean ack, String cause) {
+                System.out.println("=====消息进行消费了======");
+                if(ack){
+                    System.out.println("消息id为: "+correlationData+"的消息，已经被ack成功");
+                }else{
+                    System.out.println("消息id为: "+correlationData+"的消息，消息nack，失败原因是："+cause);
+                }
+            }
+        });
+        return rabbitTemplate;
     }
 }
