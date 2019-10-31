@@ -24,20 +24,26 @@ public class CountDownLantchDemo2 {
                 TimeUnit.SECONDS,new LinkedBlockingQueue());
         CountDownLatch countDownLatch = new CountDownLatch(1000);
         CountDownLatch gate = new CountDownLatch(1);
+        List<Future<Integer>> resultList = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
-            threadPoolExecutor.submit(() -> {
-                System.out.println(Thread.currentThread().getName()+" is reading");
+            CountDownLantchDemo2 countDownLantchDemo2 = new CountDownLantchDemo2();
+            Future<Integer> future = threadPoolExecutor.submit(() -> {
+                System.out.println(Thread.currentThread().getName() + " is reading");
                 //让所有线程（用户）处于准备状态
                 gate.await();
                 int stock = getStock();
                 countDownLatch.countDown();
                 return stock;
             });
+            resultList.add(future);
         }
         //开抢
         gate.countDown();
         //阻塞等待所有线程（用户）完成
         countDownLatch.await();
+        for (Future<Integer> future : resultList) {
+            System.out.println("每个用户抢完后剩下对库存："+future.get());
+        }
         threadPoolExecutor.shutdown();
         System.out.println("剩余库存"+stock);
     }
