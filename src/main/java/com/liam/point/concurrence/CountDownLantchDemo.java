@@ -14,7 +14,6 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class CountDownLantchDemo {
 
-    //    static AtomicInteger a = new AtomicInteger(100);
     static Integer a = 1000;
 
     public static void main(String[] args) throws InterruptedException {
@@ -29,7 +28,6 @@ public class CountDownLantchDemo {
                     countDownLatch.countDown();
                     System.out.println(Thread.currentThread().getName() + " " + a);
                 }
-
             };
             executors.execute(runnable);
         }
